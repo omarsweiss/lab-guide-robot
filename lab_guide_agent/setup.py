@@ -15,11 +15,12 @@ setup(
     zip_safe=True,
     maintainer='omar',
     maintainer_email='swaiss.omar@gmail.com',
-    description='TODO: Package description',
+    description='Bilingual Arabic/English LLM agent that drives the lab guide robot.',
     license='TODO: License declaration',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'agent_node = lab_guide_agent.agent_node:main',
+            'chat_cli = lab_guide_agent.chat_cli:main',
         ],
     },
 )

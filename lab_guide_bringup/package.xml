@@ -3,11 +3,27 @@
 <package format="3">
   <name>lab_guide_bringup</name>
   <version>0.0.1</version>
-  <description>TODO: Package description</description>
+  <description>Launch files, world, maps and parameters that bring up the lab guide robot.</description>
   <maintainer email="swaiss.omar@gmail.com">omar</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
+
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>turtlebot3_description</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+
+  <exec_depend>lab_guide_perception</exec_depend>
+  <exec_depend>lab_guide_control</exec_depend>
+  <exec_depend>lab_guide_agent</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

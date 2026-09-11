@@ -22,9 +22,8 @@ setup(
     zip_safe=True,
     maintainer='omar',
     maintainer_email='swaiss.omar@gmail.com',
-    description='TODO: Package description',
+    description='Launch files, world, maps and parameters that bring up the lab guide robot.',
     license='TODO: License declaration',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
         ],

@@ -1,1 +1,33 @@
 # Named lab station poses/waypoints the robot can navigate to.
+# Poses are in the map frame, yaw in radians. Re-measure these against your own map after running mapping.launch.py.
+
+stations:
+  entrance:
+    x: 0.0
+    y: 0.0
+    yaw: 0.0
+    description: "The main door of the lab, where visitors are greeted."
+
+  workbench:
+    x: 2.5
+    y: 1.6
+    yaw: 1.5708
+    description: "The electronics workbench, with soldering irons, an oscilloscope and bench power supplies."
+
+  microscope:
+    x: -2.2
+    y: 1.8
+    yaw: 3.1416
+    description: "The optical microscope station used for inspecting circuit boards and samples."
+
+  printer_3d:
+    x: -2.4
+    y: -1.9
+    yaw: -1.5708
+    description: "The 3D printing corner, with two FDM printers used for rapid prototyping."
+
+  meeting_corner:
+    x: 2.3
+    y: -1.7
+    yaw: -2.3562
+    description: "The meeting corner with a round table, where the team holds design discussions."

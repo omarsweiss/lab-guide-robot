@@ -11,15 +11,16 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
+    # ultralytics is not packaged for rosdep; install it separately with: pip install ultralytics
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='omar',
     maintainer_email='swaiss.omar@gmail.com',
-    description='TODO: Package description',
+    description='YOLO based visitor detection for the lab guide robot.',
     license='TODO: License declaration',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'person_detector_node = lab_guide_perception.person_detector_node:main',
         ],
     },
 )
