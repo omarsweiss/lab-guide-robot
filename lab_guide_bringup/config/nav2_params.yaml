@@ -14,6 +14,15 @@ amcl:
     odom_frame_id: odom
     scan_topic: scan
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    # The robot always spawns at the entrance, so seed the filter there instead of
+    # waiting for a 2D Pose Estimate in RViz. Without this AMCL never publishes map->odom
+    # and the whole navigation stack fails to activate.
+    set_initial_pose: true
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: 0.0
     laser_model_type: likelihood_field
     laser_likelihood_max_dist: 2.0
     laser_max_range: 8.0

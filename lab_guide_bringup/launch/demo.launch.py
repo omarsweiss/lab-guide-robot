@@ -10,15 +10,28 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+# This distro ships no nav2_bringup package, so the stack is composed server by server.
+LOCALIZATION_NODES = ['map_server', 'amcl']
+NAVIGATION_NODES = [
+    'controller_server',
+    'smoother_server',
+    'planner_server',
+    'behavior_server',
+    'bt_navigator',
+    'waypoint_follower',
+    'velocity_smoother',
+]
+
 
 def generate_launch_description() -> LaunchDescription:
     bringup_share = get_package_share_directory('lab_guide_bringup')
-    nav2_bringup_share = get_package_share_directory('nav2_bringup')
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     map_file = LaunchConfiguration('map')
     params_file = LaunchConfiguration('params_file')
     stations_file = LaunchConfiguration('stations_file')
+
+    common = [params_file, {'use_sim_time': use_sim_time}]
 
     sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup_share, 'launch', 'sim.launch.py')),
@@ -26,14 +39,41 @@ def generate_launch_description() -> LaunchDescription:
         condition=IfCondition(LaunchConfiguration('start_sim')),
     )
 
-    nav2 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(nav2_bringup_share, 'launch', 'bringup_launch.py')),
-        launch_arguments={
-            'map': map_file,
-            'params_file': params_file,
-            'use_sim_time': use_sim_time,
-        }.items(),
-    )
+    def nav2_node(package: str, executable: str, extra: list | None = None) -> Node:
+        return Node(
+            package=package,
+            executable=executable,
+            name=executable,
+            output='screen',
+            parameters=common + (extra or []),
+        )
+
+    nav2_servers = [
+        nav2_node('nav2_map_server', 'map_server', [{'yaml_filename': map_file}]),
+        nav2_node('nav2_amcl', 'amcl'),
+        nav2_node('nav2_controller', 'controller_server'),
+        nav2_node('nav2_smoother', 'smoother_server'),
+        nav2_node('nav2_planner', 'planner_server'),
+        nav2_node('nav2_behaviors', 'behavior_server'),
+        nav2_node('nav2_bt_navigator', 'bt_navigator'),
+        nav2_node('nav2_waypoint_follower', 'waypoint_follower'),
+        nav2_node('nav2_velocity_smoother', 'velocity_smoother'),
+    ]
+
+    lifecycle_managers = [
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name=f'lifecycle_manager_{label}',
+            output='screen',
+            parameters=[{
+                'use_sim_time': use_sim_time,
+                'autostart': True,
+                'node_names': nodes,
+            }],
+        )
+        for label, nodes in (('localization', LOCALIZATION_NODES), ('navigation', NAVIGATION_NODES))
+    ]
 
     person_detector = Node(
         package='lab_guide_perception',
@@ -52,10 +92,7 @@ def generate_launch_description() -> LaunchDescription:
         executable='face_person_node',
         name='face_person',
         output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time,
-            'use_stamped_cmd_vel': True,
-        }],
+        parameters=[{'use_sim_time': use_sim_time, 'use_stamped_cmd_vel': True}],
     )
 
     esp32_bridge = Node(
@@ -107,7 +144,8 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument('simulate_esp32', default_value='true'),
 
         sim,
-        nav2,
+        *nav2_servers,
+        *lifecycle_managers,
         person_detector,
         face_person,
         esp32_bridge,

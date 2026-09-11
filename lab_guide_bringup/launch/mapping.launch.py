@@ -19,16 +19,22 @@ def generate_launch_description() -> LaunchDescription:
 
     sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup_share, 'launch', 'sim.launch.py')),
-        launch_arguments={'use_sim_time': use_sim_time}.items(),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'headless': LaunchConfiguration('headless'),
+        }.items(),
         condition=IfCondition(LaunchConfiguration('start_sim')),
     )
 
-    slam = Node(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox',
-        output='screen',
-        parameters=[slam_params, {'use_sim_time': use_sim_time}],
+    # slam_toolbox is a lifecycle node; its own launch file drives the configure/activate transitions.
+    slam = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py')
+        ),
+        launch_arguments={
+            'slam_params_file': slam_params,
+            'use_sim_time': use_sim_time,
+        }.items(),
     )
 
     rviz = Node(
@@ -55,6 +61,7 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('start_sim', default_value='true'),
+        DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument('teleop', default_value='false'),
         DeclareLaunchArgument(

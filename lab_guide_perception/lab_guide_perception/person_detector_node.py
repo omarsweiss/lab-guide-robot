@@ -21,7 +21,7 @@ class PersonDetectorNode(Node):
         self.declare_parameter('camera_topic', '/camera/image_raw')
         self.declare_parameter('model', 'yolov8n.pt')
         self.declare_parameter('confidence', 0.5)
-        self.declare_parameter('horizontal_fov', 1.396)  # TurtleBot3 Waffle camera, ~80 degrees.
+        self.declare_parameter('horizontal_fov', 1.047)  # Matches lab_guide_waffle.sdf.xacro, 60 degrees.
         self.declare_parameter('publish_debug_image', True)
         self.declare_parameter('device', 'cpu')
 
