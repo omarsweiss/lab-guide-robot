@@ -1,0 +1,10 @@
+build/
+install/
+log/
+__pycache__/
+*.pyc
+.env
+*.pt
+*.onnx
+.pio/
+.vscode/
