@@ -4,17 +4,48 @@ from typing import Protocol
 
 from lab_guide_agent.dispatcher import Tool
 
-SYSTEM_PROMPT = """You are the guide robot for a research lab. You speak both Arabic and English.
+SYSTEM_PROMPT_TEMPLATE = """You are the guide robot for a research lab. You speak both Arabic and English.
 
-Always reply in the same language the visitor used. If they write in Arabic, answer in Arabic; if they
-write in English, answer in English. Keep answers short and friendly, one or two sentences, because they
-are spoken aloud to someone standing next to you.
+LANGUAGE RULE. Reply in the same language the visitor wrote in. If their message is in English, your
+reply must be in English. If their message is in Arabic, your reply must be in Arabic. Never switch to
+the other language on your own. Keep replies to one or two short, friendly sentences, because they are
+spoken aloud to someone standing next to you.
 
-Use the tools to act on the world instead of guessing. Call list_stations before naming a station you are
-unsure about, and never invent a station that is not in the list. When a visitor asks to be taken
-somewhere, call go_to_station and tell them you are on the way. If someone asks you to stop, call stop
-immediately. Answer questions about what you can see by calling get_status rather than assuming.
+STATION NAMES. Station names are fixed identifiers, always lowercase English: {stations}.
+Pass them to tools exactly as spelled, even when you are talking
+to the visitor in Arabic. Never translate a station name into Arabic inside a tool call, and never invent
+one that list_stations did not return. In your spoken reply you may of course name the place in Arabic.
+
+TOOLS. Actually call the tools; never claim you did something without calling the matching tool. To take
+someone somewhere, call go_to_station. To answer what places exist, call list_stations. To answer what
+you can see or what you are doing, call get_status. If anyone asks you to stop, call stop immediately.
+If a tool reports an error, tell the visitor plainly what went wrong instead of pretending it worked.
 """
+
+
+def system_prompt(stations: list[str]) -> str:
+    """The prompt names the real stations, so the model has no reason to invent or translate one."""
+    return SYSTEM_PROMPT_TEMPLATE.format(stations=', '.join(stations))
+
+
+def build_alias_index(stations: dict[str, dict]) -> dict[str, str]:
+    """Maps every accepted spelling, including the Arabic ones, onto its canonical station name."""
+    lookup = {}
+    for name, entry in stations.items():
+        for alias in [name, *(entry.get('aliases') or [])]:
+            lookup[str(alias).strip().lower()] = name
+    return lookup
+
+
+def is_arabic(text: str) -> bool:
+    """True when the text contains Arabic script."""
+    return any('؀' <= char <= 'ۿ' or 'ݐ' <= char <= 'ݿ' for char in text)
+
+
+def language_reminder(text: str) -> str:
+    """Small models drift out of the visitor's language, so the choice is made here and stated outright."""
+    language = 'Arabic' if is_arabic(text) else 'English'
+    return f'The visitor wrote in {language}. Write your reply in {language} and no other language.'
 
 
 class RobotInterface(Protocol):

@@ -5,7 +5,8 @@ from typing import Any
 import requests
 
 DEFAULT_HOST = 'http://localhost:11434'
-DEFAULT_MODEL = 'llama3.1'
+# qwen2.5 is the default because its Arabic is far stronger than llama3.1's, which matters for a bilingual guide.
+DEFAULT_MODEL = 'qwen2.5:7b'
 
 
 class LLMError(RuntimeError):
@@ -18,7 +19,7 @@ class OllamaClient:
         host: str = DEFAULT_HOST,
         model: str = DEFAULT_MODEL,
         temperature: float = 0.2,
-        timeout: float = 120.0,
+        timeout: float = 300.0,
     ) -> None:
         self.host = host.rstrip('/')
         self.model = model

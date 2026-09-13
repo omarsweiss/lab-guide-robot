@@ -35,7 +35,10 @@ def generate_launch_description() -> LaunchDescription:
 
     sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(bringup_share, 'launch', 'sim.launch.py')),
-        launch_arguments={'use_sim_time': use_sim_time}.items(),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'headless': LaunchConfiguration('headless'),
+        }.items(),
         condition=IfCondition(LaunchConfiguration('start_sim')),
     )
 
@@ -133,13 +136,14 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('start_sim', default_value='true'),
+        DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument('map', default_value=os.path.join(bringup_share, 'maps', 'lab.yaml')),
         DeclareLaunchArgument('params_file', default_value=os.path.join(bringup_share, 'config', 'nav2_params.yaml')),
         DeclareLaunchArgument('stations_file', default_value=os.path.join(bringup_share, 'config', 'stations.yaml')),
         DeclareLaunchArgument('yolo_model', default_value='yolov8n.pt'),
         DeclareLaunchArgument('ollama_host', default_value='http://localhost:11434'),
-        DeclareLaunchArgument('llm_model', default_value='llama3.1'),
+        DeclareLaunchArgument('llm_model', default_value='qwen2.5:7b'),
         DeclareLaunchArgument('esp32_port', default_value='/dev/ttyACM0'),
         DeclareLaunchArgument('simulate_esp32', default_value='true'),
 

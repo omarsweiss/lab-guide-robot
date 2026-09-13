@@ -3,6 +3,7 @@
 import pytest
 
 from lab_guide_agent.dispatcher import Dispatcher, Tool
+from lab_guide_agent.tools import build_alias_index, is_arabic, language_reminder, system_prompt
 
 
 def make_tool(handler, *, name='go_to_station', required=('station',)):
@@ -83,3 +84,52 @@ def test_names_are_sorted():
         make_tool(lambda: 'b', name='face_person', required=()),
     ]
     assert Dispatcher(tools).names() == ['face_person', 'stop']
+
+
+# ----- station aliases and language handling -----
+
+STATIONS = {
+    'microscope': {'aliases': ['المجهر', 'ميكروسكوب', 'the microscope']},
+    'printer_3d': {'aliases': ['3d printer', 'الطابعة']},
+    'entrance': {},
+}
+
+
+def test_canonical_names_resolve_to_themselves():
+    index = build_alias_index(STATIONS)
+    assert index['microscope'] == 'microscope'
+    assert index['entrance'] == 'entrance'
+
+
+def test_arabic_alias_resolves_to_the_canonical_station():
+    index = build_alias_index(STATIONS)
+    assert index['المجهر'] == 'microscope'
+    assert index['ميكروسكوب'] == 'microscope'
+    assert index['الطابعة'] == 'printer_3d'
+
+
+def test_aliases_are_matched_case_and_space_insensitively():
+    index = build_alias_index(STATIONS)
+    assert index['  The Microscope '.strip().lower()] == 'microscope'
+    assert index['3D Printer'.strip().lower()] == 'printer_3d'
+
+
+def test_station_without_aliases_still_resolves():
+    assert build_alias_index({'entrance': {}})['entrance'] == 'entrance'
+
+
+def test_arabic_script_is_detected():
+    assert is_arabic('من فضلك خذني إلى المجهر')
+    assert not is_arabic('take me to the microscope')
+    assert not is_arabic('printer_3d')
+
+
+def test_language_reminder_names_the_visitors_language():
+    assert 'Arabic' in language_reminder('ما هي الأماكن؟')
+    assert 'English' in language_reminder('what places are there?')
+
+
+def test_system_prompt_lists_the_real_stations():
+    prompt = system_prompt(['entrance', 'microscope'])
+    assert 'entrance, microscope' in prompt
+    assert 'Arabic' in prompt and 'English' in prompt

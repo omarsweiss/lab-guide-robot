@@ -15,7 +15,7 @@ from std_msgs.msg import Bool, Float32, Int32, String
 
 from lab_guide_agent.dispatcher import Dispatcher
 from lab_guide_agent.llm_client import LLMError, OllamaClient, parse_tool_calls
-from lab_guide_agent.tools import SYSTEM_PROMPT, build_tools
+from lab_guide_agent.tools import build_alias_index, build_tools, language_reminder, system_prompt
 
 
 class AgentNode(Node):
@@ -25,12 +25,13 @@ class AgentNode(Node):
         # Supplied by lab_guide_bringup, which owns the station definitions.
         self.declare_parameter('stations_file', '')
         self.declare_parameter('ollama_host', 'http://localhost:11434')
-        self.declare_parameter('model', 'llama3.1')
+        self.declare_parameter('model', 'qwen2.5:7b')
         self.declare_parameter('temperature', 0.2)
         self.declare_parameter('max_tool_iterations', 5)
         self.declare_parameter('history_limit', 24)
 
         self._stations = self._load_stations(self.get_parameter('stations_file').value)
+        self._aliases = build_alias_index(self._stations)
         self._max_tool_iterations = self.get_parameter('max_tool_iterations').value
         self._history_limit = self.get_parameter('history_limit').value
 
@@ -40,6 +41,7 @@ class AgentNode(Node):
             temperature=self.get_parameter('temperature').value,
         )
         self._dispatcher = Dispatcher(build_tools(self))
+        self._system_prompt = system_prompt(self.list_stations())
         self._history: list[dict] = []
         self._lock = threading.Lock()
 
@@ -84,7 +86,7 @@ class AgentNode(Node):
         self.get_logger().info(f'visitor: {text}')
         with self._lock:
             self._history.append({'role': 'user', 'content': text})
-            reply = self._run_agent()
+            reply = self._run_agent(text)
             self._trim_history()
 
         self.get_logger().info(f'robot: {reply}')
@@ -92,8 +94,13 @@ class AgentNode(Node):
 
     # ----- agent loop -----
 
-    def _run_agent(self) -> str:
-        messages = [{'role': 'system', 'content': SYSTEM_PROMPT}, *self._history]
+    def _run_agent(self, text: str) -> str:
+        # The reminder sits after the history so it is the last thing the model reads before answering.
+        messages = [
+            {'role': 'system', 'content': self._system_prompt},
+            *self._history,
+            {'role': 'system', 'content': language_reminder(text)},
+        ]
 
         for _ in range(self._max_tool_iterations):
             try:
@@ -204,10 +211,10 @@ class AgentNode(Node):
         return pose
 
     def _station(self, station: str) -> dict:
-        entry = self._stations.get(station.strip().lower())
-        if entry is None:
+        name = self._aliases.get(station.strip().lower())
+        if name is None:
             raise KeyError(f'unknown station {station!r}; known stations: {", ".join(self._stations)}')
-        return entry
+        return self._stations[name]
 
     def _load_stations(self, path: str) -> dict[str, dict]:
         if not path:
@@ -215,6 +222,7 @@ class AgentNode(Node):
         with open(path) as handle:
             document = yaml.safe_load(handle) or {}
         return {str(name).lower(): entry for name, entry in (document.get('stations') or {}).items()}
+
 
 
 def main(args=None) -> None:

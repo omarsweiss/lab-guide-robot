@@ -1,6 +1,10 @@
 # Named lab station poses/waypoints the robot can navigate to.
 # Poses are in the map frame, yaw in radians. Each pose is an approach spot in open floor space,
 # facing the furniture it belongs to, and was verified clear against maps/lab.pgm.
+#
+# aliases exist because the LLM does not reliably pass the exact identifier back, especially when the
+# visitor is speaking Arabic. They are matched case-insensitively, so a visitor asking for
+# "the microscope" or "المجهر" both resolve to the microscope station.
 
 stations:
   entrance:
@@ -8,27 +12,32 @@ stations:
     y: 0.0
     yaw: 0.0
     description: "The main door of the lab, where visitors are greeted."
+    aliases: ["door", "the entrance", "front door", "المدخل", "الباب", "البوابة", "مدخل"]
 
   workbench:
     x: 3.4
     y: 1.2
     yaw: 1.5708
     description: "The electronics workbench, with soldering irons, an oscilloscope and bench power supplies."
+    aliases: ["work bench", "bench", "electronics bench", "طاولة العمل", "المنصة", "منضدة العمل", "طاولة الإلكترونيات"]
 
   microscope:
     x: -2.6
     y: 1.5
     yaw: 2.1588
     description: "The optical microscope station used for inspecting circuit boards and samples."
+    aliases: ["the microscope", "optical microscope", "المجهر", "ميكروسكوب", "الميكروسكوب", "مجهر"]
 
   printer_3d:
     x: -2.5
     y: -1.9
     yaw: -2.4228
     description: "The 3D printing corner, with two FDM printers used for rapid prototyping."
+    aliases: ["3d printer", "3d_printer", "printer", "printing", "الطابعة", "طابعة ثلاثية الأبعاد", "الطابعة ثلاثية الأبعاد", "طابعة"]
 
   meeting_corner:
     x: 2.2
     y: -1.6
     yaw: -0.6747
     description: "The meeting corner with a round table, where the team holds design discussions."
+    aliases: ["meeting corner", "meeting", "meeting room", "table", "زاوية الاجتماع", "ركن الاجتماعات", "قاعة الاجتماع", "الاجتماع"]
